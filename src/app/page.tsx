@@ -108,9 +108,69 @@ const UptimeMonitor = () => {
   );
 };
 
+const GuestComms = () => {
+  const [inputText, setInputText] = useState('');
+  const [translation, setTranslation] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleTranslate = async () => {
+    if (!inputText.trim()) return;
+    setLoading(true);
+    setTranslation('');
+    
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: inputText }),
+      });
+      const data = await res.json();
+      if (data.translation) {
+        setTranslation(data.translation);
+      } else {
+        setTranslation('Error: ' + data.error);
+      }
+    } catch (error) {
+      setTranslation('Error: Translation engine failure.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-6 border border-cyan-500/20 rounded-lg bg-cyan-500/5 space-y-4 font-mono">
+      <h2 className="text-xl font-bold text-cyan-400 tracking-wider">IBEROSTAR THE CLUB: GUEST COMMS</h2>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-cyan-500/70 text-sm mb-2 uppercase">Input Stream (English):</label>
+          <textarea 
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            className="w-full h-32 bg-black border border-cyan-500/30 rounded-md p-3 text-cyan-300 focus:outline-none focus:border-cyan-400 resize-none placeholder-cyan-500/30"
+            placeholder="Type message here..."
+          />
+        </div>
+        <button 
+          onClick={handleTranslate}
+          disabled={loading || !inputText.trim()}
+          className="w-full py-3 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase"
+        >
+          {loading ? 'Processing...' : 'Execute Translation'}
+        </button>
+        <div>
+          <label className="block text-cyan-500/70 text-sm mb-2 uppercase">Output Stream (Spanish):</label>
+          <div className="w-full h-32 bg-black border border-cyan-500/30 rounded-md p-3 text-cyan-400 overflow-y-auto whitespace-pre-wrap">
+            {translation || <span className="text-cyan-500/30 animate-pulse">Awaiting input...</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const [tab, setTab] = useState('TRADE');
-  const tabs = ['TRADE', 'SENSORS', 'ORG', 'TASKS', 'STANDUP', 'UPTIME'];
+  const tabs = ['TRADE', 'SENSORS', 'ORG', 'TASKS', 'STANDUP', 'UPTIME', 'COMMS'];
 
   return (
     <main className="min-h-screen bg-black text-white p-6 font-mono">
@@ -134,6 +194,7 @@ export default function Dashboard() {
         {tab === 'TASKS' && <Tasks />}
         {tab === 'STANDUP' && <Standup />}
         {tab === 'UPTIME' && <UptimeMonitor />}
+        {tab === 'COMMS' && <GuestComms />}
       </div>
     </main>
   );
